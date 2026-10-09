@@ -21,9 +21,36 @@ const menuToggle = document.getElementById("menuToggle");
 const menu = document.getElementById("menu");
 
 if (menuToggle && menu) {
-  menuToggle.addEventListener("click", () => menu.classList.toggle("open"));
-  document.querySelectorAll(".menu a").forEach(link => {
-    link.addEventListener("click", () => menu.classList.remove("open"));
+  const setMenuOpen = open => {
+    menu.classList.toggle("open", open);
+    menuToggle.setAttribute("aria-expanded", String(open));
+    menuToggle.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu");
+    menuToggle.textContent = open ? "×" : "☰";
+  };
+
+  menuToggle.addEventListener("click", () => {
+    setMenuOpen(!menu.classList.contains("open"));
+  });
+
+  menu.querySelectorAll("a").forEach(link => {
+    link.addEventListener("click", () => setMenuOpen(false));
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && menu.classList.contains("open")) {
+      setMenuOpen(false);
+      menuToggle.focus();
+    }
+  });
+
+  document.addEventListener("click", event => {
+    if (
+      menu.classList.contains("open") &&
+      !menu.contains(event.target) &&
+      !menuToggle.contains(event.target)
+    ) {
+      setMenuOpen(false);
+    }
   });
 }
 
@@ -37,7 +64,9 @@ if (whatsappFloat) whatsappFloat.href = whatsappUrl();
 if (footerWhatsapp) footerWhatsapp.href = whatsappUrl();
 
 const reveals = document.querySelectorAll(".reveal");
-if ("IntersectionObserver" in window) {
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+if ("IntersectionObserver" in window && !reduceMotion) {
   const observer = new IntersectionObserver((entries, obs) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -45,7 +74,8 @@ if ("IntersectionObserver" in window) {
         obs.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.12 });
+  }, { threshold: 0.12, rootMargin: "0px 0px -24px 0px" });
+
   reveals.forEach(el => observer.observe(el));
 } else {
   reveals.forEach(el => el.classList.add("show"));
